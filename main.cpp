@@ -12,6 +12,7 @@ const std::complex<double> I(0.0, 1.0);
 
 // Fast Fourier Transform, based on Cooley-Tukey FFT
 void FFT(std::complex<double> fs[], std::complex<double> f_hats[], long N) {
+    // Base case
     if (N == 1) {
         f_hats[0] = fs[0];
     }
@@ -20,14 +21,17 @@ void FFT(std::complex<double> fs[], std::complex<double> f_hats[], long N) {
         std::complex<double> f_odd[N/2];
         std::complex<double> fs_even[N/2]; 
         std::complex<double> fs_odd[N/2];
+        // Fit in even terms and odd terms
         for (long i = 0; i < N/2; i++) {
             fs_even[i] = fs[2*i];
             fs_odd[i] = fs[1+2*i];
         }
+        // Recursion
         FFT(fs_even, f_even, N/2);
         FFT(fs_odd, f_odd, N/2);
         std::complex<double> p;
         std::complex<double> q;
+        // Compute coefficients
         for (long i = 0; i < N/2; i++) {
             p = f_even[i];
             q = exp(-2. * M_PI * i / N * I) * f_odd[i];
@@ -39,6 +43,7 @@ void FFT(std::complex<double> fs[], std::complex<double> f_hats[], long N) {
 
 // Inverse Fast Fourier Transform, based on Cooley-Tukey FFT
 void IFFT(std::complex<double> fs[], std::complex<double> f_hats[], long N) {
+    // Base case
     if (N == 1) {
         f_hats[0] = fs[0];
     }
@@ -47,14 +52,17 @@ void IFFT(std::complex<double> fs[], std::complex<double> f_hats[], long N) {
         std::complex<double> f_odd[N/2];
         std::complex<double> fs_even[N/2]; 
         std::complex<double> fs_odd[N/2];
+        // Fit in even terms and odd terms
         for (long i = 0; i < N/2; i++) {
             fs_even[i] = fs[2*i];
             fs_odd[i] = fs[1+2*i];
         }
+        // Recursion
         IFFT(fs_even, f_even, N/2);
         IFFT(fs_odd, f_odd, N/2);
         std::complex<double> p;
         std::complex<double> q;
+        // Compute coefficients
         for (long i = 0; i < N/2; i++) {
             p = f_even[i];
             q = exp(2. * M_PI * i / N * I) * f_odd[i];
@@ -64,6 +72,7 @@ void IFFT(std::complex<double> fs[], std::complex<double> f_hats[], long N) {
     }
 }
 
+// Compute largest error i.e. max norm
 double err(double* x, std::complex<double> y[], long N) {
   double error = 0;
   for (long i = 0; i < N; i++) error = std::max(error, fabs(x[i]-y[i].real()));
@@ -71,6 +80,7 @@ double err(double* x, std::complex<double> y[], long N) {
 }
 
 int main() {
+    // Test with cosine function
     long N = 20;
     std::complex<double> fs[N]; 
     std::complex<double> f_hats[N]; 
@@ -84,7 +94,7 @@ int main() {
         fs[j] = y;
         f_hats[j] = 0.;
     }
-
+    // Check forward and inverse transformation
     FFT(fs, f_hats, N);
     IFFT(fs, f_hats, N);
     for (long j = 0; j < N; j++) {
