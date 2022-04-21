@@ -184,11 +184,20 @@ double err(double* x, std::complex<double> y[], long N) {
   return error;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    unsigned int log2N; // input number
+    if(argc != 2)
+    {
+        fprintf(stderr, "sequential prime factorization\n");
+        fprintf(stderr, "num = input number\n");
+        exit(1);
+    }
+
+    log2N = (unsigned int) atoi(argv[1]);
     // Test with cosine function
-    long N = 32768;
+    long N = long(pow(2, log2N));
+    // Test with cosine function
     long threshold = 1024;
-    long log2N = 16;
     std::complex<double> fs[N]; 
     std::complex<double> f_hats[N]; 
     double xs[N]; 
