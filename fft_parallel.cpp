@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <complex>
+#include "utils.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -163,8 +164,9 @@ double err(double* x, std::complex<double> y[], long N) {
 
 int main() {
     // Test with cosine function
-    long N = 16;
-    long log2N = 4;
+    long log2N = 17;
+    long N = pow(2,log2N);
+    
     std::complex<double> fs[N]; 
     std::complex<double> f_hats[N]; 
     double xs[N]; 
@@ -180,22 +182,29 @@ int main() {
     // Check forward and inverse transformation
     //FFT(fs, f_hats, N);
     //IFFT(f_hats, fs, N);
+    Timer timer;
+    timer.tic();
     FFT_ite(fs, f_hats, N, log2N);
+    double time = timer.toc();
+    printf("FFT_ite time: %3f\n",time);
+
+    timer.tic();
     IFFT_ite(f_hats, fs, N, log2N);
+    printf("IFFT_ite time: %3f\n",timer.toc());
     for (long j = 0; j < N; j++) {
         fs[j] = fs[j].real() / N;
     }
-    for (long j = 0; j < N; j++) {
-        printf("%10f,", xs[j]);
-    }
-    printf("\n");
-    for (long j = 0; j < N; j++) {
-        printf("%10f,", fs[j].real());
-    }
-    printf("\n");
-    for (long j = 0; j < N; j++) {
-        printf("%10f,", ys[j]);
-    }
+    // for (long j = 0; j < N; j++) {
+    //     printf("%10f,", xs[j]);
+    // }
+    // printf("\n");
+    // for (long j = 0; j < N; j++) {
+    //     printf("%10f,", fs[j].real());
+    // }
+    // printf("\n");
+    // for (long j = 0; j < N; j++) {
+    //     printf("%10f,", ys[j]);
+    // }
     printf("\n");
     printf("error: %10f\n", err(ys, fs, N));
 
