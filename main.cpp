@@ -11,6 +11,11 @@
 const std::complex<double> I(0.0, 1.0);
 
 // Fast Fourier Transform, based on Cooley-Tukey FFT
+// void recursion(std::complex<double> fs[], std::complex<double> f_hats[], long N) {
+//     #pragma omp parallel
+//     #pragma omp single
+//     return recursion_par(fs, f_hats, N, 0);
+// }
 void FFT(std::complex<double> fs[], std::complex<double> f_hats[], long N) {
     // Base case
     if (N == 1) {
@@ -22,21 +27,29 @@ void FFT(std::complex<double> fs[], std::complex<double> f_hats[], long N) {
         std::complex<double> fs_even[N/2]; 
         std::complex<double> fs_odd[N/2];
         // Fit in even terms and odd terms
-        for (long i = 0; i < N/2; i++) {
-            fs_even[i] = fs[2*i];
-            fs_odd[i] = fs[1+2*i];
-        }
-        // Recursion
-        FFT(fs_even, f_even, N/2);
-        FFT(fs_odd, f_odd, N/2);
-        std::complex<double> p;
-        std::complex<double> q;
-        // Compute coefficients
-        for (long i = 0; i < N/2; i++) {
-            p = f_even[i];
-            q = exp(2. * M_PI * i / N * I) * f_odd[i];
-            f_hats[i] = p+q;
-            f_hats[i+N/2] = p-q;
+        #pragma omp parallel
+        {
+            #pragma omp for
+            for (long i = 0; i < N/2; i++) {
+                fs_even[i] = fs[2*i];
+                fs_odd[i] = fs[1+2*i];
+            }
+            #pragma omp single
+            {
+                // Recursion
+                FFT(fs_even, f_even, N/2);
+                FFT(fs_odd, f_odd, N/2);
+            }
+            std::complex<double> p;
+            std::complex<double> q;
+            // Compute coefficients
+            #pragma omp for
+            for (long i = 0; i < N/2; i++) {
+                p = f_even[i];
+                q = exp(2. * M_PI * i / N * I) * f_odd[i];
+                f_hats[i] = p+q;
+                f_hats[i+N/2] = p-q;
+            }
         }
     }
 }
@@ -163,8 +176,8 @@ double err(double* x, std::complex<double> y[], long N) {
 
 int main() {
     // Test with cosine function
-    long N = 16;
-    long log2N = 4;
+    long N = 32768;
+    long log2N = 16;
     std::complex<double> fs[N]; 
     std::complex<double> f_hats[N]; 
     double xs[N]; 
@@ -178,25 +191,25 @@ int main() {
         f_hats[j] = 0.;
     }
     // Check forward and inverse transformation
-    //FFT(fs, f_hats, N);
-    //IFFT(f_hats, fs, N);
-    FFT_ite(fs, f_hats, N, log2N);
-    IFFT_ite(f_hats, fs, N, log2N);
+    FFT(fs, f_hats, N);
+    IFFT(f_hats, fs, N); 
+    // FFT_ite(fs, f_hats, N, log2N);
+    // IFFT_ite(f_hats, fs, N, log2N);
     for (long j = 0; j < N; j++) {
         fs[j] = fs[j].real() / N;
     }
-    for (long j = 0; j < N; j++) {
-        printf("%10f,", xs[j]);
-    }
-    printf("\n");
-    for (long j = 0; j < N; j++) {
-        printf("%10f,", fs[j].real());
-    }
-    printf("\n");
-    for (long j = 0; j < N; j++) {
-        printf("%10f,", ys[j]);
-    }
-    printf("\n");
+    // for (long j = 0; j < N; j++) {
+    //     printf("%10f,", xs[j]);
+    // }
+    // printf("\n");
+    // for (long j = 0; j < N; j++) {
+    //     printf("%10f,", fs[j].real());
+    // }
+    // printf("\n");
+    // for (long j = 0; j < N; j++) {
+    //     printf("%10f,", ys[j]);
+    // }
+    // printf("\n");
     printf("%10f\n", err(ys, fs, N));
 
     return 0;
