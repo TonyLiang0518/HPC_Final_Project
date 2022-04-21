@@ -34,7 +34,7 @@ void FFT(std::complex<double> fs[], std::complex<double> f_hats[], long N) {
         // Compute coefficients
         for (long i = 0; i < N/2; i++) {
             p = f_even[i];
-            q = exp(-2. * M_PI * i / N * I) * f_odd[i];
+            q = exp(2. * M_PI * i / N * I) * f_odd[i];
             f_hats[i] = p+q;
             f_hats[i+N/2] = p-q;
         }
@@ -65,11 +65,15 @@ void IFFT(std::complex<double> fs[], std::complex<double> f_hats[], long N) {
         // Compute coefficients
         for (long i = 0; i < N/2; i++) {
             p = f_even[i];
-            q = exp(2. * M_PI * i / N * I) * f_odd[i];
-            f_hats[i] = p+q;
-            f_hats[i+N/2] = p-q;
+            q = exp(-2. * M_PI * i / N * I) * f_odd[i];
+            f_hats[i] = (p+q);
+            f_hats[i+N/2] = (p-q);
         }
     }
+}
+
+void FFT_ite(std::complex<double> fs[], std::complex<double> f_hats[], long N, long log2N) {
+
 }
 
 // Compute largest error i.e. max norm
@@ -81,7 +85,7 @@ double err(double* x, std::complex<double> y[], long N) {
 
 int main() {
     // Test with cosine function
-    long N = 20;
+    long N = 16;
     std::complex<double> fs[N]; 
     std::complex<double> f_hats[N]; 
     double xs[N]; 
@@ -96,13 +100,21 @@ int main() {
     }
     // Check forward and inverse transformation
     FFT(fs, f_hats, N);
-    IFFT(fs, f_hats, N);
+
+    IFFT(f_hats, fs, N);
+    for (long j = 0; j < N; j++) {
+        fs[j] = fs[j].real() / N;
+    }
     for (long j = 0; j < N; j++) {
         printf("%10f,", xs[j]);
     }
     printf("\n");
     for (long j = 0; j < N; j++) {
         printf("%10f,", fs[j].real());
+    }
+    printf("\n");
+    for (long j = 0; j < N; j++) {
+        printf("%10f,", ys[j]);
     }
     printf("\n");
     printf("%10f\n", err(ys, fs, N));
