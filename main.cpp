@@ -163,7 +163,7 @@ double err(double* x, std::complex<double> y[], long N) {
 
 int main() {
     // Test with cosine function
-    long N = 16;
+    long N = 32768;
     long log2N = 4;
     std::complex<double> fs[N]; 
     std::complex<double> f_hats[N]; 
@@ -178,25 +178,25 @@ int main() {
         f_hats[j] = 0.;
     }
     // Check forward and inverse transformation
-    //FFT(fs, f_hats, N);
-    //IFFT(f_hats, fs, N);
-    FFT_ite(fs, f_hats, N, log2N);
-    IFFT_ite(f_hats, fs, N, log2N);
+    FFT(fs, f_hats, N);
+    IFFT(f_hats, fs, N);
+    // FFT_ite(fs, f_hats, N, log2N);
+    // IFFT_ite(f_hats, fs, N, log2N);
     for (long j = 0; j < N; j++) {
         fs[j] = fs[j].real() / N;
     }
-    for (long j = 0; j < N; j++) {
-        printf("%10f,", xs[j]);
-    }
-    printf("\n");
-    for (long j = 0; j < N; j++) {
-        printf("%10f,", fs[j].real());
-    }
-    printf("\n");
-    for (long j = 0; j < N; j++) {
-        printf("%10f,", ys[j]);
-    }
-    printf("\n");
+    // for (long j = 0; j < N; j++) {
+    //     printf("%10f,", xs[j]);
+    // }
+    // printf("\n");
+    // for (long j = 0; j < N; j++) {
+    //     printf("%10f,", fs[j].real());
+    // }
+    // printf("\n");
+    // for (long j = 0; j < N; j++) {
+    //     printf("%10f,", ys[j]);
+    // }
+    // printf("\n");
     printf("%10f\n", err(ys, fs, N));
 
     return 0;
