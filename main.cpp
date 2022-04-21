@@ -72,8 +72,86 @@ void IFFT(std::complex<double> fs[], std::complex<double> f_hats[], long N) {
     }
 }
 
-void FFT_ite(std::complex<double> fs[], std::complex<double> f_hats[], long N, long log2N) {
+unsigned int bitReverse(unsigned int x, int log2n)
+{
+    int n = 0;
+    for (int i = 0; i < log2n; i++)
+    {
+        n <<= 1;
+        n |= (x & 1);
+        x >>= 1;
+    }
+    return n;
+}
+ 
+// Iterative FFT function to compute the DFT
+// of given coefficient vector
+void FFT_ite(std::complex<double> fs[], std::complex<double> f_hats[], long N, long log2N)
+{
+    // bit reversal of the given array
+    for (unsigned int i = 0; i < N; ++i) {
+        int rev = bitReverse(i, log2N);
+        f_hats[i] = fs[rev];
+    }
+ 
+    for (int s = 1; s <= log2N; ++s) {
+        int m = 1 << s; // 2 power s
+        int m2 = m >> 1; // m2 = m/2 -1
+        std::complex<double> w(1, 0);
+ 
+        // principle root of nth complex
+        // root of unity.
+        std::complex<double> wm = exp(I * (M_PI / m2));
+        for (int j = 0; j < m2; ++j) {
+            for (int k = j; k < N; k += m) {
+ 
+                // t = twiddle factor
+                std::complex<double> t = w * f_hats[k + m2];
+                std::complex<double> u = f_hats[k];
+ 
+                // similar calculating y[k]
+                f_hats[k] = u + t;
+ 
+                // similar calculating y[k+n/2]
+                f_hats[k + m2] = u - t;
+            }
+            w *= wm;
+        }
+    }
+}
 
+void IFFT_ite(std::complex<double> fs[], std::complex<double> f_hats[], long N, long log2N)
+{
+    // bit reversal of the given array
+    for (unsigned int i = 0; i < N; ++i) {
+        int rev = bitReverse(i, log2N);
+        f_hats[i] = fs[rev];
+    }
+ 
+    for (int s = 1; s <= log2N; ++s) {
+        int m = 1 << s; // 2 power s
+        int m2 = m >> 1; // m2 = m/2 -1
+        std::complex<double> w(1, 0);
+ 
+        // principle root of nth complex
+        // root of unity.
+        std::complex<double> wm = exp(-I * (M_PI / m2));
+        for (int j = 0; j < m2; ++j) {
+            for (int k = j; k < N; k += m) {
+ 
+                // t = twiddle factor
+                std::complex<double> t = w * f_hats[k + m2];
+                std::complex<double> u = f_hats[k];
+ 
+                // similar calculating y[k]
+                f_hats[k] = u + t;
+ 
+                // similar calculating y[k+n/2]
+                f_hats[k + m2] = u - t;
+            }
+            w *= wm;
+        }
+    }
 }
 
 // Compute largest error i.e. max norm
@@ -86,6 +164,7 @@ double err(double* x, std::complex<double> y[], long N) {
 int main() {
     // Test with cosine function
     long N = 16;
+    long log2N = 4;
     std::complex<double> fs[N]; 
     std::complex<double> f_hats[N]; 
     double xs[N]; 
@@ -99,9 +178,10 @@ int main() {
         f_hats[j] = 0.;
     }
     // Check forward and inverse transformation
-    FFT(fs, f_hats, N);
-
-    IFFT(f_hats, fs, N);
+    //FFT(fs, f_hats, N);
+    //IFFT(f_hats, fs, N);
+    FFT_ite(fs, f_hats, N, log2N);
+    IFFT_ite(f_hats, fs, N, log2N);
     for (long j = 0; j < N; j++) {
         fs[j] = fs[j].real() / N;
     }
