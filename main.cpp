@@ -89,13 +89,6 @@ unsigned int bitReverse(unsigned int x, int log2n)
 // of given coefficient vector
 void FFT_ite(std::complex<double> fs[], std::complex<double> f_hats[], long N, long log2N)
 {
-    // bit reversal of the given array
-    #pragma omp parallel for shared(fs, f_hats, N, log2N)
-    for (unsigned int i = 0; i < N; ++i) {
-        int rev = bitReverse(i, log2N);
-        f_hats[i] = fs[rev];
-    }
- 
     for (int s = 1; s <= log2N; ++s) {
         int m = 1 << s; // 2 power s
         int m2 = m >> 1; // m2 = m/2 -1
@@ -124,13 +117,6 @@ void FFT_ite(std::complex<double> fs[], std::complex<double> f_hats[], long N, l
 
 void IFFT_ite(std::complex<double> fs[], std::complex<double> f_hats[], long N, long log2N)
 {
-    // bit reversal of the given array
-    #pragma omp parallel for shared(fs, f_hats, N, log2N)
-    for (unsigned int i = 0; i < N; ++i) {
-        int rev = bitReverse(i, log2N);
-        f_hats[i] = fs[rev];
-    }
- 
     for (int s = 1; s <= log2N; ++s) {
         int m = 1 << s; // 2 power s
         int m2 = m >> 1; // m2 = m/2 -1
@@ -198,12 +184,30 @@ int main(int argc, char* argv[]) {
     }
     // Check forward and inverse transformation
     start = clock();
+    #pragma omp parallel
+    {
+    // bit reversal of the given array
+    #pragma omp for
+    for (unsigned int i = 0; i < N; ++i) {
+        int rev = bitReverse(i, log2N);
+        f_hats[i] = fs[rev];
+    }
+    #pragma omp single
     FFT(fs, f_hats, N);
+    // bit reversal of the given array
+    #pragma omp for
+    for (unsigned int i = 0; i < N; ++i) {
+        int rev = bitReverse(i, log2N);
+        fs[i] = f_hats[rev];
+    }
+    #pragma omp single
     IFFT(f_hats, fs, N);
     // FFT_ite(fs, f_hats, N, log2N);
     // IFFT_ite(f_hats, fs, N, log2N);
+    #pragma omp for
     for (long j = 0; j < N; j++) {
         fs[j] = fs[j].real() / N;
+    }
     }
     end = clock();
     time_taken = (double)(end - start)/CLOCKS_PER_SEC;
@@ -235,7 +239,11 @@ int main(int argc, char* argv[]) {
     std::complex<double> Us[N];
     // initialize
     start = clock();
-    #pragma omp parallel for
+    std::complex<double> coeff[N];
+    std::complex<double> div;
+    #pragma omp parallel shared(coeff) private(div)
+    {
+    #pragma omp for
     for (long j = 0; j < N; j++) {
         double x = h*(j);
         double u_true = sin(cos(x));
@@ -247,16 +255,20 @@ int main(int argc, char* argv[]) {
         u_hats[j] = 0.;
         Fs[j] = 0.;
     }
+    #pragma omp for
+    for (unsigned int i = 0; i < N; ++i) {
+        int rev = bitReverse(i, log2N);
+        Fs[i] = fs[rev];
+    } 
+    #pragma omp single
     FFT_ite(fs, Fs, N, log2N);
-    std::complex<double> coeff[N];
     // wave frequency shifted
-    #pragma omp parallel for
+    #pragma omp for
     for (long j = 0; j < N/2; j++) {
         coeff[j] = j;
         coeff[N-j-1] = -1-j;
     }
-    std::complex<double> div;
-    #pragma omp parallel for
+    #pragma omp for
     for (long j = 0; j < N; j++) {
         div = (-beta + I*alpha*coeff[j] - coeff[j]*coeff[j]);
         Us[j] = Fs[j].real() / div.real();
@@ -264,10 +276,17 @@ int main(int argc, char* argv[]) {
         //printf("%10f, %10f, ", div.real(), div.imag());
         //printf("%10f, %10f \n", Us[j].real(), Us[j].imag());
     }
+    #pragma omp for
+    for (unsigned int i = 0; i < N; ++i) {
+        int rev = bitReverse(i, log2N);
+        u_hats[i] = Us[rev];
+    } 
+    #pragma omp single
     IFFT_ite(Us, u_hats, N, log2N);
-    #pragma omp parallel for
+    #pragma omp for
     for (long j = 0; j < N; j++) {
         u_hats[j] = u_hats[j].real() / N;
+    }
     }
     end = clock();
     time_taken = (double)(end - start)/CLOCKS_PER_SEC;
