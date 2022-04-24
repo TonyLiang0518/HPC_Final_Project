@@ -167,6 +167,8 @@ void ex1(double alpha, double beta, std::complex<double> fs[], long N) {
 
 int main(int argc, char* argv[]) {
     unsigned int log2N; // input number
+    clock_t start, end;
+    double time_taken;
     if(argc != 2)
     {
         fprintf(stderr, "sequential prime factorization\n");
@@ -191,6 +193,7 @@ int main(int argc, char* argv[]) {
         f_hats[j] = 0.;
     }
     // Check forward and inverse transformation
+    start = clock();
     FFT(fs, f_hats, N);
     IFFT(f_hats, fs, N);
     // FFT_ite(fs, f_hats, N, log2N);
@@ -198,6 +201,8 @@ int main(int argc, char* argv[]) {
     for (long j = 0; j < N; j++) {
         fs[j] = fs[j].real() / N;
     }
+    end = clock();
+    time_taken = (double)(end - start)/CLOCKS_PER_SEC;
     // for (long j = 0; j < N; j++) {
     //     printf("%10f,", xs[j]);
     // }
@@ -210,7 +215,9 @@ int main(int argc, char* argv[]) {
     //     printf("%10f,", ys[j]);
     // }
     // printf("\n");
+    printf("Time taken for FFT and IFFT for size %ld is: %f s\n", N, time_taken);
     printf("Transform function check: %10f\n", err(ys, fs, N));
+    printf("----------------------------------------------------------\n");
 
     // This part solves the PDE u_xx + alpha*u_x - beta*u = f, with periodic BC u(0)=u(2pi)=0
     // test with exact solution u = sin(cos(x)) --> u_x = -cos(cos(x))sin(x) --> u_xx = -sin^2(x)sin(cos(x))-cos(x)cos(cos(x))
@@ -222,6 +229,8 @@ int main(int argc, char* argv[]) {
     std::complex<double> Fs[N]; 
     std::complex<double> u_hats[N]; 
     std::complex<double> Us[N]; 
+    // initialize
+    start = clock();
     for (long j = 0; j < N; j++) {
         double x = h*(j);
         double u_true = sin(cos(x));
@@ -252,7 +261,11 @@ int main(int argc, char* argv[]) {
     for (long j = 0; j < N; j++) {
         u_hats[j] = u_hats[j].real() / N;
     }
+    end = clock();
+    time_taken = (double)(end - start)/CLOCKS_PER_SEC;
+    printf("Time taken for solving PDE with size %ld is: %f s\n", N, time_taken);
     printf("1-D second order PDE check: %10f\n", err(us, u_hats, N));
+    printf("----------------------------------------------------------\n");
 
     // This part solves 1-D Laplace equation -u_xx = 1 with u(0)=u(1)=0, exact solution is u(x) = -0.5x^2 + 0.5x
     h = 1/N;
