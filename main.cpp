@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <complex>
+#include <time.h>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -89,6 +90,7 @@ unsigned int bitReverse(unsigned int x, int log2n)
 void FFT_ite(std::complex<double> fs[], std::complex<double> f_hats[], long N, long log2N)
 {
     // bit reversal of the given array
+    #pragma omp parallel for shared(fs, f_hats, N, log2N)
     for (unsigned int i = 0; i < N; ++i) {
         int rev = bitReverse(i, log2N);
         f_hats[i] = fs[rev];
@@ -123,6 +125,7 @@ void FFT_ite(std::complex<double> fs[], std::complex<double> f_hats[], long N, l
 void IFFT_ite(std::complex<double> fs[], std::complex<double> f_hats[], long N, long log2N)
 {
     // bit reversal of the given array
+    #pragma omp parallel for shared(fs, f_hats, N, log2N)
     for (unsigned int i = 0; i < N; ++i) {
         int rev = bitReverse(i, log2N);
         f_hats[i] = fs[rev];
@@ -167,6 +170,8 @@ void ex1(double alpha, double beta, std::complex<double> fs[], long N) {
 
 int main(int argc, char* argv[]) {
     unsigned int log2N; // input number
+    clock_t start, end;
+    double time_taken;
     if(argc != 2)
     {
         fprintf(stderr, "sequential prime factorization\n");
@@ -181,7 +186,8 @@ int main(int argc, char* argv[]) {
     std::complex<double> fs[N]; 
     std::complex<double> f_hats[N]; 
     double xs[N]; 
-    double ys[N]; 
+    double ys[N];
+    #pragma omp parallel for
     for (long j = 0; j < N; j++) {
         double x = -1. + j*0.1;
         double y = cos(x * M_PI);
@@ -191,6 +197,7 @@ int main(int argc, char* argv[]) {
         f_hats[j] = 0.;
     }
     // Check forward and inverse transformation
+    start = clock();
     FFT(fs, f_hats, N);
     IFFT(f_hats, fs, N);
     // FFT_ite(fs, f_hats, N, log2N);
@@ -198,6 +205,8 @@ int main(int argc, char* argv[]) {
     for (long j = 0; j < N; j++) {
         fs[j] = fs[j].real() / N;
     }
+    end = clock();
+    time_taken = (double)(end - start)/CLOCKS_PER_SEC;
     // for (long j = 0; j < N; j++) {
     //     printf("%10f,", xs[j]);
     // }
@@ -210,7 +219,9 @@ int main(int argc, char* argv[]) {
     //     printf("%10f,", ys[j]);
     // }
     // printf("\n");
+    printf("Time taken for FFT and IFFT for size %ld is: %f s\n", N, time_taken);
     printf("Transform function check: %10f\n", err(ys, fs, N));
+    printf("----------------------------------------------------------\n");
 
     // This part solves the PDE u_xx + alpha*u_x - beta*u = f, with periodic BC u(0)=u(2pi)=0
     // test with exact solution u = sin(cos(x)) --> u_x = -cos(cos(x))sin(x) --> u_xx = -sin^2(x)sin(cos(x))-cos(x)cos(cos(x))
@@ -221,7 +232,10 @@ int main(int argc, char* argv[]) {
     //std::complex<double> fs[N]; 
     std::complex<double> Fs[N]; 
     std::complex<double> u_hats[N]; 
-    std::complex<double> Us[N]; 
+    std::complex<double> Us[N];
+    // initialize
+    start = clock();
+    #pragma omp parallel for
     for (long j = 0; j < N; j++) {
         double x = h*(j);
         double u_true = sin(cos(x));
@@ -236,11 +250,13 @@ int main(int argc, char* argv[]) {
     FFT_ite(fs, Fs, N, log2N);
     std::complex<double> coeff[N];
     // wave frequency shifted
+    #pragma omp parallel for
     for (long j = 0; j < N/2; j++) {
         coeff[j] = j;
         coeff[N-j-1] = -1-j;
     }
     std::complex<double> div;
+    #pragma omp parallel for
     for (long j = 0; j < N; j++) {
         div = (-beta + I*alpha*coeff[j] - coeff[j]*coeff[j]);
         Us[j] = Fs[j].real() / div.real();
@@ -249,10 +265,15 @@ int main(int argc, char* argv[]) {
         //printf("%10f, %10f \n", Us[j].real(), Us[j].imag());
     }
     IFFT_ite(Us, u_hats, N, log2N);
+    #pragma omp parallel for
     for (long j = 0; j < N; j++) {
         u_hats[j] = u_hats[j].real() / N;
     }
+    end = clock();
+    time_taken = (double)(end - start)/CLOCKS_PER_SEC;
+    printf("Time taken for solving PDE with size %ld is: %f s\n", N, time_taken);
     printf("1-D second order PDE check: %10f\n", err(us, u_hats, N));
+    printf("----------------------------------------------------------\n");
 
     // This part solves 1-D Laplace equation -u_xx = 1 with u(0)=u(1)=0, exact solution is u(x) = -0.5x^2 + 0.5x
     h = 1/N;
