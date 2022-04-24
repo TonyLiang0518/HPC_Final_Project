@@ -161,6 +161,10 @@ double err(double* x, std::complex<double> y[], long N) {
   return error;
 }
 
+void ex1(double alpha, double beta, std::complex<double> fs[], long N) {
+
+}
+
 int main(int argc, char* argv[]) {
     unsigned int log2N; // input number
     if(argc != 2)
@@ -206,7 +210,123 @@ int main(int argc, char* argv[]) {
     //     printf("%10f,", ys[j]);
     // }
     // printf("\n");
-    printf("%10f\n", err(ys, fs, N));
+    printf("Transform function check: %10f\n", err(ys, fs, N));
+
+    // This part solves the PDE u_xx + alpha*u_x - beta*u = f, with periodic BC u(0)=u(2pi)=0
+    // test with exact solution u = sin(cos(x)) --> u_x = -cos(cos(x))sin(x) --> u_xx = -sin^2(x)sin(cos(x))-cos(x)cos(cos(x))
+    double h = 2.*M_PI / (N);
+    double alpha = 1.;
+    double beta = 1.;
+    double us[N];
+    //std::complex<double> fs[N]; 
+    std::complex<double> Fs[N]; 
+    std::complex<double> u_hats[N]; 
+    std::complex<double> Us[N]; 
+    for (long j = 0; j < N; j++) {
+        double x = h*(j);
+        double u_true = sin(cos(x));
+        double u_x = -cos(cos(x))*sin(x);
+        double u_xx = -sin(x)*sin(x)*sin(cos(x)) - cos(x)*cos(cos(x));
+        xs[j] = x;
+        us[j] = u_true;
+        fs[j] = u_xx + alpha*u_x - beta*u_true;
+        u_hats[j] = 0.;
+        Fs[j] = 0.;
+    }
+    FFT_ite(fs, Fs, N, log2N);
+    std::complex<double> coeff[N];
+    // wave frequency shifted
+    for (long j = 0; j < N/2; j++) {
+        coeff[j] = j;
+        coeff[N-j-1] = -1-j;
+    }
+    std::complex<double> div;
+    for (long j = 0; j < N; j++) {
+        div = (-beta + I*alpha*coeff[j] - coeff[j]*coeff[j]);
+        Us[j] = Fs[j].real() / div.real();
+        //printf("%10f, %10f, ", Fs[j].real(), Fs[j].imag());
+        //printf("%10f, %10f, ", div.real(), div.imag());
+        //printf("%10f, %10f \n", Us[j].real(), Us[j].imag());
+    }
+    IFFT_ite(Us, u_hats, N, log2N);
+    for (long j = 0; j < N; j++) {
+        u_hats[j] = u_hats[j].real() / N;
+    }
+    printf("1-D second order PDE check: %10f\n", err(us, u_hats, N));
+
+    // This part solves 1-D Laplace equation -u_xx = 1 with u(0)=u(1)=0, exact solution is u(x) = -0.5x^2 + 0.5x
+    h = 1/N;
+    for (long j = 0; j < N; j++) {
+        double x = h*(j);
+        double u_true = 0.5 * x * (-x+1);
+        xs[j] = x;
+        us[j] = u_true;
+        fs[j] = 1.;
+        u_hats[j] = 0.;
+        Fs[j] = 0.;
+    }
+    FFT_ite(fs, Fs, N, log2N);
+    // wave frequency shifted
+    for (long j = 0; j < N/2; j++) {
+        coeff[j] = j * 2 * M_PI;
+        coeff[N-j-1] = (-1-j) * 2 * M_PI;
+    }
+    for (long j = 0; j < N; j++) {
+        div = coeff[j]*coeff[j];
+        Us[j] = Fs[j].real() / div.real();
+        //printf("%10f, %10f, ", Fs[j].real(), Fs[j].imag());
+        //printf("%10f, %10f, ", div.real(), div.imag());
+        //printf("%10f, %10f \n", Us[j].real(), Us[j].imag());
+    }
+    IFFT_ite(Us, u_hats, N, log2N);
+    for (long j = 0; j < N; j++) {
+        u_hats[j] = u_hats[j].real() / N;
+    }
+    printf("1-D Laplace equation check: %10f\n", err(us, u_hats, N));
+
+    // This part solves heat equation u_t = u_xx by using Fourier transform to turn PDE into ODE and time step forward in time 
+    // with u(x,0) = 1 if -1<x<1 and 0 otherwise on domain -5<x<5, exact solution: u(x, t) = exp(-(pi/10)^2 *t) * sin(pi/10 *x)
+    double L = 10.;
+    h = L/N;
+    std::complex<double> u0[N];
+    std::complex<double> U0[N];
+    double t = 0.01;
+    double u_true=0.;
+    for (long j = 0; j < N; j++) {
+        double x = -5. + h*j;
+        if (j>=((L/2. - L/5.)/h) && j<=((L/2. + L/5.)/h)) {
+            u_true = exp(-t*(M_PI/(10.*L))*(M_PI/(10.*L))) * cos(M_PI / (10.*L) * x)/10.;
+            u0[j] = cos(M_PI / (10.*L) * x)/10.;
+        }
+        else {
+            u_true = 0.;
+            u0[j] = 0.;
+        }
+        xs[j] = x;
+        us[j] = u_true;
+        
+        u_hats[j] = 0.;
+        U0[j] = 0.;
+        Fs[j] = 0.;
+
+        
+    }
+    std::complex<double> ksq;
+    FFT_ite(u0, U0, N, log2N);
+    // wave frequency shifted
+    for (long j = 0; j < N/2; j++) {
+        coeff[j] = j * 2. * M_PI / L;
+        coeff[N-j-1] = (-1.-j) * 2. * M_PI / L;
+    }
+    for (long j = 0; j < N; j++) {
+        ksq = coeff[j]*coeff[j];
+        Us[j] = U0[j] * exp(-t*ksq);
+    }
+    IFFT_ite(Us, u_hats, N, log2N);
+    for (long j = 0; j < N; j++) {
+        u_hats[j] = u_hats[j].real() / N;
+    }
+    printf("1-D heat equation check: %10f\n", err(us, u_hats, N));
 
     return 0;
 }
