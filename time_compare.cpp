@@ -239,8 +239,8 @@ int main(int argc, char **argv)
             
         }
         speedup[i] = omp_time/seq_time;
-        printf("seq time: %3f\n", seq_time);
-        printf("omp time: %3f\n", omp_time);
+        printf("seq time: %3f\n", seq_time/20);
+        printf("omp time: %3f\n", omp_time/20);
         printf("N: %d; speedup: %3f\n", i, speedup[i]);
 
     }
