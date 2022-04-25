@@ -188,10 +188,10 @@ double err(double *x, std::complex<double> y[], long N)
     return error;
 }
 
-int main()
+int main(int argc, char **argv)
 {
     // Test with cosine function
-    long log2N = 17;
+    long log2N = read_option<long>("-n", argc, argv);
     double seq_time[17];
     double omp_time[17];
     double speedup[17];
@@ -238,11 +238,11 @@ int main()
 
             
         }
-        speedup[i] = seq_time/omp_time;
+        speedup[i] = omp_time/seq_time;
+        printf("seq time: %3f\n", seq_time);
+        printf("omp time: %3f\n", omp_time);
+        printf("N: %d; speedup: %3f\n", i, speedup[i]);
 
-    }
-    for (int i = 0; i < 17; i++) {
-        printf("i: %d; speedup: %3f\n", i, speedup[i]);
     }
 
     return 0;
