@@ -522,6 +522,10 @@ int main(int argc, char **argv)
             FFT_rec_2(fs, f_hats, N, threshold_depth);
             IFFT_rec_2(f_hats, fs, N, threshold_depth);
             rec_task_time += timer.toc(); 
+            for (long j = 0; j < N; j++) {
+                fs[j] = fs[j].real() / N;
+            }
+            printf("%10f\n", err(ys, fs, N));
 
             // Run iterative
             for (long j = 0; j < N; j++)
