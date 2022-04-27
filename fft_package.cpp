@@ -44,4 +44,6 @@ int main(int argc, char **argv)
         fftw_free(out);
         fftw_free(back_out);
     }
+
+    return 0;
 }
