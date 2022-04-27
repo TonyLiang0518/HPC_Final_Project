@@ -2,4 +2,4 @@ echo "Building..."
 make
 
 echo "Runing..."
-./compare -n 17
+./compare -n 16 > result.log
