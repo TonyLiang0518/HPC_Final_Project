@@ -1,6 +1,6 @@
 CXX = g++
-CXXFLAGS = -std=c++11 -O3 -march=native  ./fftw-3.3.10/.libs/libfftw3.a -lm -fopenmp
-
+CXXFLAGS = -std=c++11 -O3 -march=native
+LIBS = -L./temp/lib/ -lfftw3 -I./temp/include/ -lm -fopenmp
 # turning off auto-vectorization since this can make hand-vectorized code slower
 CXXFLAGS += -fno-tree-vectorize
 
