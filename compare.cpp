@@ -508,7 +508,7 @@ int main(int argc, char **argv)
             rec_para_time += timer.toc(); 
 
             // Run recursive task
-            long threshold_depth = 10;
+            long threshold_depth = i <= 10 ? 0 : i - 10;
             for (long j = 0; j < N; j++)
             {
                 double x = -1. + j * 0.1;
