@@ -8,7 +8,7 @@ run `make` to compiler all files.
 
 `./compare -n 10` get run time of recursion FFT, iteration FFT and their parallel version
 
-`./fft_package -n n` get run time of use fftw package
+`./fft_package -n 10` get run time of use fftw package
 
 `./pde -n 5` get result of PDE using recusion FFT
 
