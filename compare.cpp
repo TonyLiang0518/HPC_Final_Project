@@ -458,6 +458,11 @@ int main(int argc, char **argv)
     // Test with cosine function
     long log2N = read_option<long>("-n", argc, argv);
     //double speedup[log2N];
+    double rec_time_arr[log2N];
+    double rec_parallel_time_arr[log2N];
+    double rec_task_time_arr[log2N];
+    double ite_time_arr[log2N];
+    double ite_parallel_time_arr[log2N];
 
     for (int i = 1; i <= log2N; i++)
     {
@@ -556,14 +561,39 @@ int main(int argc, char **argv)
             
         }
         //speedup[i] = omp_time/seq_time;
-        printf("--------%d---------\n", i);
-        printf("rec time: %3f\n", rec_time/20);
-        printf("rec with parallelfor time: %3f\n", rec_para_time/20); 
-        printf("rec with task time: %3f\n", rec_task_time/20); 
-        printf("ite time: %3f\n", ite_time/20);
-        printf("ite with parallelfor time: %3f\n", ite_para_time/20);
+        rec_time_arr[i-1] = rec_time/20;
+        rec_parallel_time_arr[i-1] = rec_para_time/20;
+        rec_task_time_arr[i-1] = rec_task_time/20;
+        ite_time_arr[i-1] = ite_time/20;
+        ite_parallel_time_arr[i-1] = ite_para_time/20;
+        // printf("--------%d---------\n", i);
+        // printf("rec time: %3f\n", rec_time/20);
+        // printf("rec with parallelfor time: %3f\n", rec_para_time/20); 
+        // printf("rec with task time: %3f\n", rec_task_time/20); 
+        // printf("ite time: %3f\n", ite_time/20);
+        // printf("ite with parallelfor time: %3f\n", ite_para_time/20);
         //printf("N: %d; speedup: %3f\n", i, speedup[i]);
 
+    }
+    printf("rec time\n");
+    for (int i = 0; i < log2N; i++) {
+        printf("%.20g ", rec_time_arr[i]);
+    }
+    printf("\nrec parallel time\n");
+    for (int i = 0; i < log2N; i++) {
+        printf("%.20g ", rec_parallel_time_arr[i]);
+    }
+    printf("\nrec task time\n");
+    for (int i = 0; i < log2N; i++) {
+        printf("%.20g ", rec_task_time_arr[i]);
+    }
+    printf("\nite time\n");
+    for (int i = 0; i < log2N; i++) {
+        printf("%.20g ", ite_time_arr[i]);
+    }
+    printf("\nite parallel time\n");
+    for (int i = 0; i < log2N; i++) {
+        printf("%.20g ", ite_parallel_time_arr[i]);
     }
 
     return 0;

@@ -7,7 +7,7 @@ int main(int argc, char **argv)
 
     long log2N = read_option<long>("-n", argc, argv);
     long times = 20;
-    double total_time = 0.0;
+    double time_arr[log2N];
 
     for (int i = 1; i <= log2N; i++)
     {
@@ -49,7 +49,12 @@ int main(int argc, char **argv)
             fftw_free(out);
             fftw_free(back_out);
         }
-        printf("run time: %3f\n", total_time / times);
+        time_arr[i-1] = total_time / times
+        // printf("run time: %3f\n", total_time / times);
+    }
+    printf("fftw run time\n")
+    for (int i = 0; i < log2N; i++) {
+        printf("%.20g ", rec_parallel_time_arr[i]);
     }
 
     return 0;
