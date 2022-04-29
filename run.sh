@@ -1,3 +1,12 @@
+echo "build fftw"
+
+./configure
+
+make
+
+make install
+
+
 echo "Building..."
 make
 
