@@ -11,7 +11,7 @@ int main(int argc, char **argv)
 
     for (int i = 1; i <= log2N; i++)
     {
-        printf("N: %d\n", i);
+        // printf("N: %d\n", i);
         double total_time = 0.0;
         for (int k = 0; k < times; k++)
         {
@@ -56,6 +56,7 @@ int main(int argc, char **argv)
     for (int i = 0; i < log2N; i++) {
         printf("%.20g ", time_arr[i]);
     }
+    
 
     return 0;
 }
