@@ -55,7 +55,7 @@ int main(int argc, char **argv)
     for (long i = 0; i < N; i++)
     {
 
-        printf("%3f ", back_out[i][0] / N);
+        printf("%10f ", back_out[i][0] / N);
     }
     fftw_destroy_plan(p);
     fftw_destroy_plan(q);

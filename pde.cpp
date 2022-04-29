@@ -253,7 +253,7 @@ int main(int argc, char* argv[]) {
         u_hats[j] = u_hats[j].real() / N;
     }
     for (long i = 0; i < N; i++) {
-        printf("%3f ", u_hats[i].real());
+        printf("%10f ", u_hats[i].real());
     }
     
     end = clock();
