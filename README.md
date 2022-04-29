@@ -1,6 +1,6 @@
 # HPC_Final_Project
 
-Author: 
+Author: He, Li, Liang
 
 This repository is final project for NYU courant course High Performance Computing.
 
