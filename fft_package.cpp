@@ -49,10 +49,10 @@ int main(int argc, char **argv)
             fftw_free(out);
             fftw_free(back_out);
         }
-        time_arr[i-1] = total_time / times
+        time_arr[i-1] = total_time / times;
         // printf("run time: %3f\n", total_time / times);
     }
-    printf("fftw run time\n")
+    printf("fftw run time\n");
     for (int i = 0; i < log2N; i++) {
         printf("%.20g ", rec_parallel_time_arr[i]);
     }
