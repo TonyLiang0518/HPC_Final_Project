@@ -54,7 +54,7 @@ int main(int argc, char **argv)
     }
     printf("fftw run time\n");
     for (int i = 0; i < log2N; i++) {
-        printf("%.20g ", rec_parallel_time_arr[i]);
+        printf("%.20g ", time_arr[i]);
     }
 
     return 0;
